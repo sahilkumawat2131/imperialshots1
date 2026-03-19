@@ -147,30 +147,49 @@ async function startSecureAdvancePayment() {
 
   try {
 
-    const tempId = "TEMP" + Date.now();
+  const tempId = "TEMP" + Date.now();
 
-    // ✅ Create Order (backend expects bookingId)
-    const response = await fetch(
-      "https://imperial-backend1-pb7k.onrender.com/create-order",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bookingId: tempId,
-          totalAmount: checkoutData.totalAmount,
-          discount: checkoutData.discount || 0,
-          paymentType: "advance"
-        })
-      }
-    );
+// ✅ STEP 1: SAVE TEMP BOOKING
+await set(ref(db, `tempBookings/${tempId}`), {
+  ...checkoutData,
+  totalAmount: Number(checkoutData.totalAmount) || 0,
+  discount: Number(checkoutData.discount) || 0,
+  userId: user.uid,
+  createdAt: Date.now()
+});
 
-    const result = await response.json();
-    console.log("Create Order Response:", result);
+// ✅ DEBUG CHECK (VERY IMPORTANT)
+const checkSnap = await get(ref(db, `tempBookings/${tempId}`));
+console.log("FIREBASE CHECK:", checkSnap.val());
 
-    if (!result.success || !result.orderId) {
-      alert("❌ Order creation failed");
-      return;
-    }
+if (!checkSnap.exists()) {
+  alert("❌ Firebase save failed");
+  return;
+}
+
+// ✅ STEP 2: CREATE ORDER
+const response = await fetch(
+  "https://imperial-backend1-1.onrender.com/create-order",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      bookingId: tempId,
+      paymentType: "advance"
+    })
+  }
+);
+
+const result = await response.json();
+console.log("Create Order Response:", result);
+
+// ❌ ERROR HANDLE
+if (!result.success || !result.orderId) {
+  alert(result.error || "❌ Order creation failed");
+  return;
+}
 
     const options = {
       key: result.key,
@@ -192,7 +211,7 @@ async function startSecureAdvancePayment() {
 
           // ✅ Verify Payment
           const verifyRes = await fetch(
-            "https://imperial-backend1-pb7k.onrender.com/verify-payment",
+            "https://imperial-backend1-1.onrender.com/verify-payment",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },

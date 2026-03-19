@@ -185,7 +185,7 @@ async function startSecurePayment(bookingId, paymentType) {
 
   try {
 
-    const BACKEND_URL = "https://imperial-backend1-pb7k.onrender.com";
+    const BACKEND_URL = "https://imperial-backend1-1.onrender.com";
 
     const booking = allBookings[bookingId];
     if (!booking) {

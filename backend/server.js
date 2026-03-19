@@ -8,21 +8,10 @@ const admin = require("firebase-admin");
 
 const app = express();
 
-/* ================= CORS FIX ================= */
+// ✅ SIMPLE CORS (BEST)
+app.use(cors());
 
-// Allow all origins (safe for now — later restrict in production)
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type"],
-  })
-);
-
-// Handle preflight explicitly
-app.options("*", cors());
-
+// ✅ BODY PARSER
 app.use(express.json());
 
 /* ================= FIREBASE ADMIN ================= */
